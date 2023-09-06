@@ -1,10 +1,10 @@
 ---
 title: Byte Range PATCH
-docname: draft-wright-http-patch-byterange-latest
-submissiontype: independent
-category: exp
+docname: draft-ietf-httpapi-patch-byterange-latest
+submissiontype: IETF
+category: std
 ipr: trust200902
-workgroup: HTTP APIs
+workgroup: "Building Blocks for HTTP APIs"
 keyword:
   - Internet-Draft
   - HTTP
