@@ -290,6 +290,32 @@ In the case of "bytes", the bytes that are read are exactly the same as the byte
 Even though the length in alternate units isn't changed, the byte length might. This might only be acceptable to servers storing these values in a database or memory structure, rather than on a byte-based filesystem.
 
 
+# Preserving Incomplete Uploads with "Prefer: transaction" {#prefer-transaction}
+
+The stateless design of HTTP generally implies that a request is atomic (otherwise parties would need to keep track of the state of a request while it's in progress). A benefit of this design is that a client does not need to be concerned with the side-effects of only the first half of an upload being honored, if there's an error partway through.
+
+However, some clients may desire partial state changes, particularly when remaking the upload is more expensive than the complexity of recovering from an interruption. In these cases, clients will want an incomplete request to be preserved as much as possible, so they may re-synchronize the state and pick up from where the incomplete request was terminated.
+
+The client's preference for atomic or upload-preserving behavior may be signaled by a Prefer header:
+
+~~~
+Prefer: transaction=atomic
+Prefer: transaction=persist
+~~~
+
+The `transaction=atomic` preference indicates that the request SHOULD apply only when a successful response is returned, and not any time during the upload.
+
+The `transaction=persist` preference indicates that uploaded data SHOULD be continuously stored as soon as possible, so that if the upload is interrupted, it is possible to resume the upload from where it left off.
+
+This preference is generally applicable to any HTTP request (and not merely for PATCH or byte range patches). Servers SHOULD indicate when this preference was honored, using a "Preference-Applied" response header. For example:
+
+~~~
+Preference-Applied: transaction=persist
+~~~
+
+Servers may consider broadcasting this in a 103 Early Hints response, since once point the final response is written, this may no longer be useful to know.
+
+
 # Segmented document creation with PATCH
 
 As an alternative to using PUT to create a new resource, the contents of a resource may be uploaded in segments, written across several PATCH requests.
@@ -364,32 +390,6 @@ Content-Length: 200
 ~~~
 
 The server responds with 200 (OK). Since this completely writes out the 600-byte document, the server may also perform final processing, for example, checking that the document is well formed. The server MAY return an error code if there is a syntax or other error, or in an earlier response as soon as it it able to detect an error, however the exact behavior is left undefined.
-
-
-# Preserving Incomplete Uploads with "Prefer: transaction" {#prefer-transaction}
-
-The stateless design of HTTP generally implies that a request is atomic (otherwise parties would need to keep track of the state of a request while it's in progress). A benefit of this design is that a client does not need to be concerned with the side-effects of only the first half of an upload being honored, if there's an error partway through.
-
-However, some clients may desire partial state changes, particularly when remaking the upload is more expensive than the complexity of recovering from an interruption. In these cases, clients will want an incomplete request to be preserved as much as possible, so they may re-synchronize the state and pick up from where the incomplete request was terminated.
-
-The client's preference for atomic or upload-preserving behavior may be signaled by a Prefer header:
-
-~~~
-Prefer: transaction=atomic
-Prefer: transaction=persist
-~~~
-
-The `transaction=atomic` preference indicates that the request SHOULD apply only when a successful response is returned, and not any time during the upload.
-
-The `transaction=persist` preference indicates that uploaded data SHOULD be continuously stored as soon as possible, so that if the upload is interrupted, it is possible to resume the upload from where it left off.
-
-This preference is generally applicable to any HTTP request (and not merely for PATCH or byte range patches). Servers SHOULD indicate when this preference was honored, using a "Preference-Applied" response header. For example:
-
-~~~
-Preference-Applied: transaction=persist
-~~~
-
-Servers may consider broadcasting this in a 103 Early Hints response, since once point the final response is written, this may no longer be useful to know.
 
 
 # Registrations
