@@ -20,6 +20,7 @@ author:
 normative:
   RFC2119: Key words for use in RFCs
   RFC9110: HTTP Semantics
+  RFC8941: "Structured Field Values for HTTP"
   RFC9112: HTTP/1.1
 
 informative:
@@ -53,7 +54,7 @@ NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED",
 described in BCP 14 {{!RFC2119}} {{!RFC8174}} when, and only when, they
 appear in all capitals, as shown here.
 
-This document uses ABNF as defined in {{!RFC5234}} and imports grammar rules from {{!RFC9112}}.
+This document uses ABNF as defined in {{!RFC5234}} and imports grammar rules from {{!RFC8941}} and {{!RFC9112}}.
 
 For brevity, example HTTP requests or responses may add newlines or whitespace,
 or omit some headers necessary for message transfer.
@@ -98,15 +99,9 @@ The client MAY indicate the anticipated final size of the document by providing 
 
 If the client does not know or care about the final length of the document, it MAY use `*` in place of complete-length. For example, `bytes 0-11/*`. Most random access writes will follow this form.
 
-As a special case, a Content-Range where the "last-pos" is omitted indicates that the upload length is indeterminate, and only the starting offset is known:
+The unsatisfied-range form (e.g. `bytes */1000`) sets the size of the document, but without writing any data. It may be used to truncate a document (to represent inverse of an append operation), or to allocate space for a document without specifying any of its contents.
 
-~~~abnf
-Content-Range =/ range-unit SP first-pos "-/" ( complete-length / "*" )
-~~~
-
-The unsatisfied-range form (e.g. `bytes */1000`) is not meaningful, it MUST be treated as a syntax error. [^1]
-
-[^1]: This form could potentially be used to specify the intended size of the target resource, without providing any data at all.
+If the "last-pos" is is unknown because the upload is indeterminate length (the Content-Length of the request is not known from the start, or the upload might continue indefinitely), then the Content-Offset field must be used instead.
 
 
 ## The Content-Length field
@@ -114,6 +109,25 @@ The unsatisfied-range form (e.g. `bytes */1000`) is not meaningful, it MUST be t
 A "Content-Length" part field, if provided, describes the length of the part body. (To describe the size of the entire target resource, see the Content-Range field.)
 
 If provided, it MUST exactly match the length of the range specified in the Content-Range field, and servers MUST error when the Content-Length mismatches the length of the range.
+
+
+## The Content-Offset field
+
+The Content-Range field specifies an offset to write the content at, when the end of the write is not known. It is used instead of Content-Range when the Content-Length is not known.
+
+Its syntax is specified as a Structured Field {{!RFC8941}}:
+
+~~~abnf
+Content-Offset = sf-item
+~~~
+
+The value indicates how much of the target document is to be skipped over, typically the number of bytes. It MUST be an sf-integer.
+
+It accepts two parameters:
+
+The "unit" parameter indicates the unit associated with the value. A missing "unit" parameter is equivelant to providing `unit=bytes`.
+
+The "complete-length" parameter is equivelant to the complete-length value in Content-Range. When provided, it MUST be an sf-integer specifying the intended final length of the document. When missing, the complete-length is unknown.
 
 
 ## The Content-Type field
@@ -492,6 +506,17 @@ Author:
 
 Change controller:
 : IESG
+
+
+## Content-Offset
+
+Field name:
+: Content-Offset
+
+Status: permanent
+
+Specification document:
+: This document.
 
 
 ## "transaction" preference
