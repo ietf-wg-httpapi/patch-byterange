@@ -18,10 +18,10 @@ author:
     email: aaa@bzfx.net
 
 normative:
-  RFC2119: Key words for use in RFCs
-  RFC9110: HTTP Semantics
+  RFC2119: "Key words for use in RFCs"
+  RFC9110: "HTTP Semantics"
   RFC8941: "Structured Field Values for HTTP"
-  RFC9112: HTTP/1.1
+  RFC9112: "HTTP/1.1"
 
 informative:
   RFC2046: "Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types"
@@ -138,16 +138,16 @@ Its use is typically limited to creating resources.
 
 ## Other fields
 
-Other part fields in the patch document SHOULD have the same meaning as if provided in a PUT request uploading the entire resource (patch applied).
+Other part fields in the patch document SHOULD have the same meaning as if it is a message-level header in a PUT request uploading the entire resource (patch applied).
 
 Use of such fields SHOULD be limited to cases where the meaning in the HTTP request headers would be different, where they would describe the entire patch, rather than the part. For example, the "Content-Type" field.
 
 
 ## Applying a patch
 
-Servers SHOULD NOT accept requests that write beyond, and not adjacent to, the end of the resource. This would create a sparse file, where some bytes are undefined. For example, writing at byte 601 of a resource where bytes 0-599 are defined; this would leave byte 600 undefined. Servers that accept sparse writes MUST NOT disclose existing content, and SHOULD fill in undefined regions with zeros.
+Servers SHOULD NOT accept requests that write beyond, and not adjacent to, the end of the resource. This would create a sparse file, where some bytes are undefined. For example, writing at byte 601 of a resource where bytes 0-599 are defined; this would leave byte 600 undefined. Servers that accept sparse writes MUST NOT disclose uninitialized content, and SHOULD fill in undefined regions with zeros.
 
-The expected length of the write can be computed from the part fields. If the actual length of the part body mismatches the expected length, this MUST be treated the same as a network interruption at the shorter length, but anticipating the longer length. Recovering from this interruption may involve rolling back the entire request, or saving as many bytes as possible. The client can then recover the same way it would recover from a network error.
+The expected length of the write can be computed from the part fields. If the actual length of the part body mismatches the expected length, this MUST be treated the same as a network interruption at the shorter length, but anticipating the longer length. Recovering from this interruption may involve rolling back the entire request, or saving as many bytes as possible. The client can then recover as it would recover from a network interruption.
 
 
 ## The multipart/byteranges media type
@@ -176,7 +176,7 @@ Content-Type: text/plain
 
 The syntax for multipart messages is defined in {{RFC2046, Section 5.1.1}}. While the body cannot contain the boundary, servers MAY use the Content-Length field to skip to the boundary (potentially ignoring a boundary in the body, which would be an error by the client).
 
-The multipart/byteranges type may be used for operations where multiple regions must be updated at the same time; clients may have an expectation that if there's an interruption, all of the parts will be rolled back.
+The multipart/byteranges type may be used for operations where multiple regions must be updated at the same time; clients expect all the changes to be recorded as a single operation, or that if there's an interruption, all of the parts from the request will be rolled back.
 
 
 ## The message/byterange media type {#message-byterange}
@@ -292,9 +292,9 @@ Even though the length in alternate units isn't changed, the byte length might. 
 
 # Preserving Incomplete Uploads with "Prefer: transaction" {#prefer-transaction}
 
-The stateless design of HTTP generally implies that a request is atomic (otherwise parties would need to keep track of the state of a request while it's in progress). A benefit of this design is that a client does not need to be concerned with the side-effects of only the first half of an upload being honored, if there's an error partway through.
+The stateless design of HTTP generally implies that a request is atomic (otherwise parties would need to keep track of the state of a request while it's in progress). Clients need not need be concerned with the side-effects of only the first half of an upload being honored, if there's an error partway through.
 
-However, some clients may desire partial state changes, particularly when remaking the upload is more expensive than the complexity of recovering from an interruption. In these cases, clients will want an incomplete request to be preserved as much as possible, so they may re-synchronize the state and pick up from where the incomplete request was terminated.
+However, some clients may desire partial state changes, particularly when remaking the upload is more expensive than recovering from an interruption. In these cases, clients will want an incomplete upload to be preserved as much as possible, so they may re-synchronize the state and pick up from where the incomplete request was terminated.
 
 The client's preference for atomic or upload-preserving behavior may be signaled by a Prefer header:
 
@@ -303,7 +303,7 @@ Prefer: transaction=atomic
 Prefer: transaction=persist
 ~~~
 
-The `transaction=atomic` preference indicates that the request SHOULD apply only when a successful response is returned, and not any time during the upload.
+The `transaction=atomic` preference indicates that the request SHOULD apply only when a successful response is returned, and not any time before the end of the upload.
 
 The `transaction=persist` preference indicates that uploaded data SHOULD be continuously stored as soon as possible, so that if the upload is interrupted, it is possible to resume the upload from where it left off.
 
@@ -313,7 +313,7 @@ This preference is generally applicable to any HTTP request (and not merely for 
 Preference-Applied: transaction=persist
 ~~~
 
-Servers may consider broadcasting this in a 103 Early Hints response, since once point the final response is written, this may no longer be useful to know.
+Servers may consider signaling this in a 103 Early Hints response, since once the final response is written, this may no longer be useful information.
 
 
 # Segmented document creation with PATCH
@@ -333,7 +333,6 @@ A user-agent may also use PATCH to recover from an interrupted PUT request, if i
 For building POST endpoints that support large uploads, clients can first upload the data to a scratch file as described above, and then process by submitting a POST request that links to the scratch file.
 
 For updating an existing large file, the client can upload to a scratch file, then execute a MOVE ({{Section 9.9 of RFC4918}}) over the intended target.
-
 
 
 ## Example
