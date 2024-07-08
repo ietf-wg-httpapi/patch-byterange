@@ -151,6 +151,17 @@ Servers SHOULD NOT accept requests that write beyond, and not adjacent to, the e
 The expected length of the write can be computed from the part fields. If the actual length of the part body mismatches the expected length, this MUST be treated the same as a network interruption at the shorter length, but anticipating the longer length. Recovering from this interruption may involve rolling back the entire request, or saving as many bytes as possible. The client can then recover as it would recover from a network interruption.
 
 
+## Range units
+
+Currently, the only defined range unit is "bytes", however this may be other, yet-to-be-defined values.
+
+In the case of "bytes", the bytes that are read are exactly the same as the bytes that are changed. However, other units may define write semantics different from a read, if symmetric behavior would not make sense. For example, if a Content-Range field adds an item in a JSON array, this write may add a leading or trailing comma, not technically part of the item itself, in order to keep the resulting document well-formed.
+
+Even though the length in alternate units isn't changed, the byte length might. This might only be acceptable to servers storing these values in a database or memory structure, rather than on a byte-based filesystem.
+
+
+# Byterange Media Types
+
 ## The multipart/byteranges media type
 
 The following is a request with a "multipart/byteranges" body to write two ranges in a document:
@@ -281,14 +292,6 @@ Field Line {
 }
 ~~~
 
-
-## Range units
-
-Currently, the only defined range unit is "bytes", however this may be other, yet-to-be-defined values.
-
-In the case of "bytes", the bytes that are read are exactly the same as the bytes that are changed. However, other units may define write semantics different from a read, if symmetric behavior would not make sense. For example, if a Content-Range field adds an item in a JSON array, this write may add a leading or trailing comma, not technically part of the item itself, in order to keep the resulting document well-formed.
-
-Even though the length in alternate units isn't changed, the byte length might. This might only be acceptable to servers storing these values in a database or memory structure, rather than on a byte-based filesystem.
 
 
 # Preserving Incomplete Uploads with "Prefer: transaction" {#prefer-transaction}
