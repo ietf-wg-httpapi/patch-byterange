@@ -27,6 +27,7 @@ informative:
   RFC2046: "Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types"
   RFC4918: "HTTP Extensions for Web Distributed Authoring and Versioning (WebDAV)"
   RFC5789: "PATCH Method for HTTP"
+  RFC8297: "An HTTP Status Code for Indicating Hints"
   RFC9292: "Binary Representation of HTTP Messages"
 
 
@@ -313,7 +314,7 @@ This preference is generally applicable to any HTTP request (and not merely for 
 Preference-Applied: transaction=persist
 ~~~
 
-Servers may consider signaling this in a 103 Early Hints response, since once the final response is written, this may no longer be useful information.
+Servers might consider signaling this in a 103 (Early Hints) response [RFC8297], since once the final response is written, this may no longer be useful information.
 
 
 # Segmented document creation with PATCH
