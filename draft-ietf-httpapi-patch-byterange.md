@@ -565,10 +565,6 @@ In general, servers SHOULD treat the complete-length hint the same as a PUT requ
 
 [^4]: This section to be removed before final publication.
 
-## Indeterminate Length Uploads
-
-There is no standard way for a Content-Range header to indicate an unknown or indeterminate-length body starting at a certain offset; the design of partial content messages requires that the sender know the total length before transmission. However it seems it should be possible to generate an indeterminate-length partial content response (e.g. return a continuously growing audio file starting at a 4MB offset). Fixing this would require a new header, update to HTTP, or a revision of HTTP.
-
 
 ## Sparse Documents
 
@@ -579,9 +575,11 @@ This pattern can enable multiple, parallel uploads to a document at the same tim
 
 Servers do not necessarily save the results of an incomplete upload; since most clients prefer atomic writes, many servers will discard an incomplete upload. A mechanism to indicate a preference for atomic vs. non-atomic writes may be defined at a later time.
 
-Byte range PATCH cannot by itself be used to recover from an interrupted PUT that updates an existing document. If the server operation is atomic, the entire operation will be lost. If the server saves the upload, it may not possible to know how much of the request was received by the server, and what was old content that already existed.
+Byte range PATCH cannot by itself provide recovery from an interrupted PUT to an existing document, as it is not generally possible to distinguish what was received by the server from what already existed.
 
 One technique would be to use a 1xx interim response to indicate a location where the partial upload is being stored. If PUT request is interrupted, the client can make PATCH requests to this temporary, non-atomic location to complete the upload. When the last part is uploaded, the original interrupted PUT request will finish.
+
+Another technique would be to send a 1xx interim response to indicate how much of the upload has been committed. When a client receives this, it can skip that many bytes from the next attempt in a PATCH request.
 
 
 ## Splicing and Binary Diff
@@ -589,3 +587,13 @@ One technique would be to use a 1xx interim response to indicate a location wher
 Operations more complicated than standard filesystem operations are out of scope for this media type. A feature of byte range patch is an upper limit on the complexity of applying the patch. In contrast, prepending, splicing, replace, or other complicated file operations could potentially require the entire file on disk be rewritten.
 
 Consider registering a media type for VCDIFF in this document, under the topic of "Media type registrations for byte-level patching".
+
+
+## Ending Indeterminate Length Uploads
+
+When uploading a patch with indeterminate-length form, Since the server doesn't know the complete-length, it might not be able to assume that the end of the request is also the end of the whole document, even if the request ended cleanly (the client may have reasons to split apart the upload). This needs to be signaled by a subsequent request with an unsatisfied-range specifying the final length of the document.
+
+
+## Reading Content-Range and Content-Offset in the headers
+
+Some parties may prefer that the message body need not be parsed at all, but instead leverage existing HTTP mechanisms to carry the part field data. Similar to how a 206 status code indicates that the response body is partial, a reserved value of Content-Type (in a PATCH request) could signal the server to read the Content-Range from the request headers, and the whole request body is the part body.
