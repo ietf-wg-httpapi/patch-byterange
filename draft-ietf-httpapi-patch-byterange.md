@@ -34,7 +34,7 @@ informative:
 
 --- abstract
 
-This document specifies a media type for PATCH payloads that overwrites a specific byte range, to allow random access writes, or allow a resource to be uploaded in several segments.
+This document specifies a media type for PATCH payloads that overwrites a specific byte range, facilitating random access writes and segmented uploads of resources.
 
 
 
@@ -65,7 +65,7 @@ The term "byte" is used in the {{!RFC9110}} sense to mean "octet." Ranges are ze
 
 # Modifying a content range with PATCH
 
-The Content-Range field in a PUT request requires support by the server in order to be processed correctly. Without specific support, the server's normal behavior would be to ignore the header, replacing the entire resource with just the part that changed, causing data corruption. To mitigate this, Content-Range may be used in conjunction with the PATCH method {{RFC5789}} as part of a media type whose semantics are to write at the specified byte offset. This document re-uses the "multipart/byteranges" media type, and defines the "message/byterange" media type, for this purpose.
+Sending a Content-Range field in a PUT request (A "partial PUT", {{RFC9110, Section 14.5}}) requires server support to be processed correctly. Without such support, the server's normal behavior would be to ignore the header, replacing the entire resource with just the part that changed, potentially causing corruption. To mitigate this, Content-Range may be used in conjunction with the PATCH method {{RFC5789}} and a media type whose semantics are to write at the specified byte offset. This document re-uses the "multipart/byteranges" media type, and defines the "message/byterange" and "application/byteranges" media types, to opportunistically carry this field.
 
 A byte range patch lists one or more _parts_. Each part specifies two essential components:
 
@@ -83,24 +83,24 @@ Content-Range: bytes 2-5/12
 cdef
 ~~~
 
-This patch represents an instruction to write the four bytes "cdef" at an offset of 2 bytes. A document listing the digits 0-9 in a row, would look like this after applying the patch:
+This patch represents an instruction to write the four bytes "cdef" at an offset of 2 bytes. A document listing the digits 0-9 on a line, would look like this after applying the patch:
 
 ~~~~
 01cdef6789␍␊
 ~~~~
 
-Although this example is a text document with a line terminator, patches are only carried as binary data, and can potentially carry or overwrite parts of multi-byte characters.
+Although this example is a text document with a line terminator, part bodies are only interperted as binary data, and can potentially overwrite individual bytes of multi-byte characters.
 
 
 ## The Content-Range field
 
 The Content-Range field (as seen inside a patch document) is used to specify where in the target document the part body will be written.
 
-The client MAY indicate the anticipated final size of the document by providing the complete-length form, for example `bytes 0-11/12`. This value of complete-length does not affect the write, however the server MAY use it for other purposes, especially for preallocating an optimal amount of space, and deciding when an upload in multiple parts has finished.
+The client MAY indicate the anticipated final size of the document by providing the complete-length form, for example the "12" in `bytes 0-11/12`. The complete-length does not affect the write by itself, however the server MAY use it for other purposes, especially for preallocating disk space, or deciding when an upload in multiple parts has finished.
 
-If the client does not know or care about the final length of the document, it MAY use `*` in place of complete-length. For example, `bytes 0-11/*`. Most random access writes will follow this form.
+If the client does not know or care about the final length of the document, it MAY use `*` in place of complete-length. For example, `bytes 0-11/*`. Most random access writes will take this form.
 
-The unsatisfied-range form (e.g. `bytes */1000`) sets the size of the document, but without writing any data. It may be used to truncate a document (to represent inverse of an append operation), or to allocate space for a document without specifying any of its contents.
+The unsatisfied-range form (e.g. `bytes */1000`) sets the size of the document, but without writing any data. It may be used to truncate a document (to invert an append operation), to allocate space for a document without specifying any of its contents, or to signal that an upload has ended when the previous part or request did not specify a complete-length. The part body MUST be empty.
 
 If the "last-pos" is is unknown because the upload is indeterminate length (the Content-Length of the request is not known from the start, or the upload might continue indefinitely), then the Content-Offset field must be used instead.
 
@@ -128,20 +128,20 @@ It accepts two parameters:
 
 The "unit" parameter indicates the unit associated with the value. A missing "unit" parameter is equivelant to providing `unit=bytes`.
 
-The "complete-length" parameter is equivelant to the complete-length value in Content-Range. When provided, it MUST be an sf-integer specifying the intended final length of the document. When missing, the complete-length is unknown.
+The "complete-length" parameter is equivelant to the complete-length value in Content-Range. When provided, it MUST be an sf-integer specifying the intended final length of the document. A missing "complete-length" is equivelant to providing `*` in Content-Range.
 
 
 ## The Content-Type field
 
 A "Content-Type" part field MUST have the same effect as if provided in a PUT request uploading the entire resource (patch applied).
-Its use is typically limited to creating resources.
+Its use is typically limited to resource creation.
 
 
 ## Other fields
 
 Other part fields in the patch document SHOULD have the same meaning as if it is a message-level header in a PUT request uploading the entire resource (patch applied).
 
-Use of such fields SHOULD be limited to cases where the meaning in the HTTP request headers would be different, where they would describe the entire patch, rather than the part. For example, the "Content-Type" field.
+Use of such fields SHOULD be limited to cases where the meaning in the HTTP request headers would be different, where they would describe the entire patch, rather than the part body. For example, the "Content-Type" or "Content-Location" fields.
 
 
 ## Applying a patch
@@ -164,7 +164,7 @@ Even though the length in alternate units isn't changed, the byte length might. 
 
 ## The multipart/byteranges media type
 
-The following is a request with a "multipart/byteranges" body to write two ranges in a document:
+The following illustrates a request with a "multipart/byteranges" body to write two ranges in a document:
 
 ~~~ example
 PATCH /uploads/foo HTTP/1.1
@@ -186,16 +186,16 @@ Content-Type: text/plain
 --THIS_STRING_SEPARATES--
 ~~~
 
-The syntax for multipart messages is defined in {{RFC2046, Section 5.1.1}}. While the body cannot contain the boundary, servers MAY use the Content-Length field to skip to the boundary (potentially ignoring a boundary in the body, which would be an error by the client).
+The syntax for multipart messages is defined in {{RFC2046, Section 5.1.1}}. While the body cannot contain the boundary, servers MAY use the Content-Length field to skip to the boundary (potentially ignoring a boundary in the body, which would be an error by the client). Content-Range MUST NOT be used in place of Content-Length for this purpose.
 
-The multipart/byteranges type may be used for operations where multiple regions must be updated at the same time; clients expect all the changes to be recorded as a single operation, or that if there's an interruption, all of the parts from the request will be rolled back.
+The multipart/byteranges type may be used for operations where multiple regions must be updated at the same time; clients expect all the changes to be recorded as a single operation, or that if there's an interruption, all of the parts will be rolled back together. However, the exact behavior is at the discretion of the server.
 
 
 ## The message/byterange media type {#message-byterange}
 
-When making a request with a single byte range, there is no need for a multipart boundary marker. This document defines a new media type "message/byterange" with the same semantics as a single byte range in a multipart/byteranges message, but with a simplified syntax.
+When making a request with a single byte range, there is no need for a multipart boundary marker. This document defines a new media type "message/byterange" with the same semantics as a single byte range in a multipart/byteranges message, but with a simplified syntax that only needs to be parsed to the first empty line.
 
-The "message/byterange" form may be used in a request as so:
+The "message/byterange" form may be used in a PATCH request as so:
 
 ~~~ example
 PATCH /uploads/foo HTTP/1.1
@@ -210,7 +210,7 @@ Content-Type: text/plain
 [200 bytes...]
 ~~~
 
-This represents a request to modify a 600-byte document, overwriting 200 bytes of it, starting at a 100-byte offset.
+This represents a request to modify a 600-byte document, starting at a 100-byte offset, overwriting 200 bytes of it.
 
 
 ### Syntax
@@ -296,9 +296,9 @@ Field Line {
 
 # Preserving Incomplete Uploads with "Prefer: transaction" {#prefer-transaction}
 
-The stateless design of HTTP generally implies that a request is atomic (otherwise parties would need to keep track of the state of a request while it's in progress). Clients need not need be concerned with the side-effects of only the first half of an upload being honored, if there's an error partway through.
+The stateless design of HTTP generally implies that a request is atomic (otherwise parties would need to keep track of the state of a request while it's in progress). Clients need not need be concerned with the side-effects of error halfway through an upload.
 
-However, some clients may desire partial state changes, particularly when remaking the upload is more expensive than recovering from an interruption. In these cases, clients will want an incomplete upload to be preserved as much as possible, so they may re-synchronize the state and pick up from where the incomplete request was terminated.
+However, some clients may desire partial state changes, particularly when remaking the upload is more expensive than recovering from an interruption. In these cases, clients will prefer the incomplete upload to be preserved as much as possible, so they may resume from where the incomplete request was terminated.
 
 The client's preference for atomic or upload-preserving behavior may be signaled by a Prefer header:
 
@@ -307,9 +307,9 @@ Prefer: transaction=atomic
 Prefer: transaction=persist
 ~~~
 
-The `transaction=atomic` preference indicates that the request SHOULD apply only when a successful response is returned, and not any time before the end of the upload.
+The `transaction=atomic` preference indicates that the request SHOULD commit only when a successful response is returned, and not any time before the end of the upload.
 
-The `transaction=persist` preference indicates that uploaded data SHOULD be continuously stored as soon as possible, so that if the upload is interrupted, it is possible to resume the upload from where it left off.
+The `transaction=persist` preference indicates that uploaded data SHOULD be continuously committed, so that if the upload is interrupted, it is possible to resume the upload from where it left off.
 
 This preference is generally applicable to any HTTP request (and not merely for PATCH or byte range patches). Servers SHOULD indicate when this preference was honored, using a "Preference-Applied" response header. For example:
 
@@ -324,22 +324,24 @@ Servers might consider signaling this in a 103 (Early Hints) response [RFC8297],
 
 As an alternative to using PUT to create a new resource, the contents of a resource may be uploaded in segments, written across several PATCH requests.
 
-A user-agent may also use PATCH to recover from an interrupted PUT request, if it was expected to create a new resource. The server will store the data sent to it by the user agent, but will not finalize the upload until the final length of the document is known and received.
+A user-agent may also use PATCH to recover from an interrupted PUT request, if it was expected to create a new resource. The server will store the data sent to it by the user agent, but will not finalize the upload until the complete length of the document is known and received.
 
-1. The client makes a PUT or PATCH request to a URL, a portion of which is generated by the client, to be unpredictable to other clients. This first request creates the resource, and should include `If-None-Match: *` to verify the target does not exist. If a PUT request, the server reads the Content-Length header and stores the intended final length of the document. If a PATCH request, the "Content-Range" field in the "message/byterange" patch is read for the final length. The final length may also be undefined, and defined in a later request.
+1. The client makes a PUT or PATCH request to a URL, a portion of which is randomized, to be unpredictable to other clients. This first request creates the resource, and should include `Prefer: transaction=persist` (to continuously commit the upload) and `If-None-Match: *` (to verify the target does not exist). If a PUT request, the server reads the Content-Length header and stores the intended complete length of the document. If a PATCH request, the "Content-Range" field in the "message/byterange" patch is read for the complete length. The complete length may also be undefined, and defined in a later request.
 
 2. If any request is interrupted, the client may make a HEAD request to determine how much, if any, of the previous response was stored, and resumes uploading from that point. The server will return 200 (OK), but this may only indicate the write has been saved; the server is not obligated to begin acting on the upload until it is complete.
 
-3. If the client sees from the HEAD response that additional data remains to be uploaded, it may make a PATCH request to resume uploading. Even if no data was uploaded or the resource was not created, the client should attempt creating the resource with PATCH to mitigate the possibility of another interrupted connection with a server that does not save incomplete transfers. However if in response to PATCH, the server reports 405 (Method Not Allowed), 415 (Unsupported Media Type), or 501 (Not Implemented), then the client must resort to a PUT request.
+3. If the client sees from the HEAD response that additional data remains to be uploaded, it may make a PATCH request to resume uploading. Even if no data was uploaded or the resource was not created, the client should attempt creating the resource with PATCH to mitigate the possibility of another interrupted connection with a server that does not save incomplete transfers. However if in response to PATCH, the server reports 405 (Method Not Allowed), 415 (Unsupported Media Type), or 501 (Not Implemented), then the client must resort to retrying the PUT request.
 
-4. The server detects the completion of the final request when the current received data matches the indicated final length. For example, a `Content-Range: 500-599/600` field is a write at the end of the resource. The server processes the upload and returns a response for it.
+4. The server detects the completion of the final request when the current received data matches the indicated complete length. For example, a `Content-Range: 500-599/600` field is a write at the end of the resource. The server processes the upload and returns a response for it.
 
-For building POST endpoints that support large uploads, clients can first upload the data to a scratch file as described above, and then process by submitting a POST request that links to the scratch file.
+If the client does not know the complete length of its upload (for example, an upload of live audio), it may use the indeterminate length form "*" to append data to the document. The end of the upload is then signaled with an "unsatisfied-range" form (e.g. `Content-Range: */1000`), which instructs the server that the upload is complete if it has received all 1000 bytes.
+
+For building POST endpoints that support large uploads, clients can first upload the data to a scratch file as described above, and then submit a link to the file in a POST request.
 
 For updating an existing large file, the client can upload to a scratch file, then execute a MOVE ({{Section 9.9 of RFC4918}}) over the intended target.
 
 
-## Example
+## Complete Length Example
 
 A single PUT request that creates a new resource may be split apart into multiple PATCH requests. Here is an example that uploads a 600-byte document across three 200-byte segments.
 
@@ -539,22 +541,17 @@ Reference:
 
 # Security Considerations {#security-considerations}
 
-## Unallocated ranges
+## Uninitialized ranges
 
 A byterange patch may permit writes to offsets beyond the end of the resource. This may have non-obvious behavior.
 
 Servers supporting sparse files MUST NOT return uninitialized memory or storage contents. Uninitialized regions may be initialized prior to executing the write, or this may be left to the filesystem if it can guarantee that unallocated space will be read as a constant value.
 
-If a server fills in unallocated space by initializing it, servers SHOULD protect against patches that make writes to very large offsets. Servers may account for this by treating it as a write by the client, similar to "Document Size Hints" below.
+## Initializing large documents
 
+A byte range patch typically only requires server resources proportional to the patch size. One exception is pre-initializing space when growing a file. This occurs when a complete-length is specified in the Content-Range field, which hints at the final upload size, or when writing to an offset far after the end of the file, and the server initializes the space in between. This initialization could be a very expensive operation compared to the actual size of the patch.
 
-## Document Size Hints
-
-A byte range patch is, overall, designed to require server resources that's proportional to the patch size. One possible exception to this rule is the complete-length part of the Content-Range field, which hints at the final upload size. Generally, this does not require the server to (immediately) allocate this amount of data. However, some servers may choose to begin preallocating disk space right away, which could be a very expensive operation compared to the actual size of the request.
-
-In general, servers SHOULD treat the complete-length hint the same as a PUT request of that size, and issue a 400 (Client Error). [^3]
-
-[^3]: 413 (Payload Too Large) might not be appropriate for this situation, as it would indicate the patch is too large and the client should break up the patches into smaller chunks, rather than the intended final upload size being too large.
+In general, servers SHOULD treat an initialization towards resource limits, and issue a 400 (Client Error) as appropriate. Note that 413 (Payload Too Large) would be misleading in this situation, as it would indicate the patch itself is too large, and the client should break up the patches into smaller chunks, rather than the intended signal that the final upload size isd too large.
 
 
 --- back
