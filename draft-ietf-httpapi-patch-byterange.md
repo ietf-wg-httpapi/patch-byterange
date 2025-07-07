@@ -63,7 +63,7 @@ or omit some headers necessary for message transfer.
 The term "byte" is used in the {{!RFC9110}} sense to mean "octet." Ranges are zero-indexed and inclusive. For example, "bytes 0-0" means the first byte of the document, and "bytes 1-2" is a range with two bytes, starting one byte into the document. Ranges of zero bytes are described by an address offset rather than a range. For example, "at byte 5" would separate the byte ranges 0-4 and 5-9.
 
 
-# Modifying a content range with PATCH
+# Modifying a Content Range with PATCH
 
 Sending a Content-Range field in a PUT request (A "partial PUT", {{RFC9110, Section 14.5}}) requires server support to be processed correctly. Without such support, the server's normal behavior would be to ignore the header, replacing the entire resource with just the part that changed, potentially causing corruption. To mitigate this, Content-Range may be used in conjunction with the PATCH method {{RFC5789}} and a media type whose semantics are to write at the specified byte offset. This document re-uses the "multipart/byteranges" media type, and defines the "message/byterange" and "application/byteranges" media types, to opportunistically carry this field.
 
@@ -92,7 +92,7 @@ This patch represents an instruction to write the four bytes "cdef" at an offset
 Although this example is a text document with a line terminator, part bodies are only interperted as binary data, and can potentially overwrite individual bytes of multi-byte characters.
 
 
-## The Content-Range field
+## The Content-Range Field
 
 The Content-Range field (as seen inside a patch document) is used to specify where in the target document the part body will be written.
 
@@ -105,14 +105,14 @@ The unsatisfied-range form (e.g. `bytes */1000`) sets the size of the document, 
 If the "last-pos" is unknown because the upload is indeterminate length (the Content-Length of the request is not known from the start, or the upload might continue indefinitely), then the Content-Offset field must be used instead.
 
 
-## The Content-Length field
+## The Content-Length Field
 
 A "Content-Length" part field, if provided, describes the length of the part body. (To describe the size of the entire target resource, see the Content-Range field.)
 
 If provided, it MUST exactly match the length of the range specified in the Content-Range field, and servers MUST error when the Content-Length mismatches the length of the range.
 
 
-## The Content-Offset field
+## The Content-Offset Field
 
 The Content-Range field specifies an offset to write the content at, when the end of the write is not known. It is used instead of Content-Range when the Content-Length is not known.
 
@@ -131,27 +131,27 @@ The "unit" parameter indicates the unit associated with the value. A missing "un
 The "complete-length" parameter is equivalent to the complete-length value in Content-Range. When provided, it MUST be an sf-integer specifying the intended final length of the document. A missing "complete-length" is equivalent to providing `*` in Content-Range.
 
 
-## The Content-Type field
+## The Content-Type Field
 
 A "Content-Type" part field MUST have the same effect as if provided in a PUT request uploading the entire resource (patch applied).
 Its use is typically limited to resource creation.
 
 
-## Other fields
+## Other Fields
 
 Other part fields in the patch document SHOULD have the same meaning as if it is a message-level header in a PUT request uploading the entire resource (patch applied).
 
 Use of such fields SHOULD be limited to cases where the meaning in the HTTP request headers would be different, where they would describe the entire patch, rather than the part body. For example, the "Content-Type" or "Content-Location" fields.
 
 
-## Applying a patch
+## Applying a Patch
 
 Servers SHOULD NOT accept requests that write beyond, and not adjacent to, the end of the resource. This would create a sparse file, where some bytes are undefined. For example, writing at byte 601 of a resource where bytes 0-599 are defined; this would leave byte 600 undefined. Servers that accept sparse writes MUST NOT disclose uninitialized content, and SHOULD fill in undefined regions with zeros.
 
 The expected length of the write can be computed from the part fields. If the actual length of the part body mismatches the expected length, this MUST be treated the same as a network interruption at the shorter length, but anticipating the longer length. Recovering from this interruption may involve rolling back the entire request, or saving as many bytes as possible. The client can then recover as it would recover from a network interruption.
 
 
-## Range units
+## Range Units
 
 Currently, the only defined range unit is "bytes", however this may be other, yet-to-be-defined values.
 
@@ -162,7 +162,7 @@ Even though the length in alternate units isn't changed, the byte length might. 
 
 # Byterange Media Types
 
-## The multipart/byteranges media type
+## The multipart/byteranges Media Type
 
 The following illustrates a request with a "multipart/byteranges" body to write two ranges in a document:
 
@@ -191,7 +191,7 @@ The syntax for multipart messages is defined in {{RFC2046, Section 5.1.1}}. Whil
 The multipart/byteranges type may be used for operations where multiple regions must be updated at the same time; clients expect all the changes to be recorded as a single operation, or that if there's an interruption, all of the parts will be rolled back together. However, the exact behavior is at the discretion of the server.
 
 
-## The message/byterange media type {#message-byterange}
+## The message/byterange Media Type {#message-byterange}
 
 When making a request with a single byte range, there is no need for a multipart boundary marker. This document defines a new media type "message/byterange" with the same semantics as a single byte range in a multipart/byteranges message, but with a simplified syntax that only needs to be parsed to the first empty line.
 
@@ -230,7 +230,7 @@ byterange-document = *( field-line CRLF )
 This document has the same semantics as a single part in a "multipart/byteranges" document ({{Section 5.1.1 of RFC2046}}) or any response with a 206 (Partial Content) status code ({{Section 15.3.7 of RFC9110}}). A "message/byterange" document may be trivially transformed into a "multipart/byteranges" document by prepending a dash-boundary and CRLF, and appending a close-delimiter (a CRLF, dash-boundary, terminating "`--`", and optional CRLF).
 
 
-## The application/byteranges media type {#message-binary}
+## The application/byteranges Media Type {#message-binary}
 
 The "application/byteranges" has the same semantics as "multipart/byteranges" but follows a binary format similar to "message/bhttp" {{RFC9292}}, which may be more suitable for some clients and servers, as all variable length strings are tagged with their length.
 
@@ -320,7 +320,7 @@ Preference-Applied: transaction=persist
 Servers might consider signaling this in a 103 (Early Hints) response [RFC8297], since once the final response is written, this may no longer be useful information.
 
 
-# Segmented document creation with PATCH
+# Segmented Document Creation with PATCH
 
 As an alternative to using PUT to create a new resource, the contents of a resource may be uploaded in segments, written across several PATCH requests.
 
