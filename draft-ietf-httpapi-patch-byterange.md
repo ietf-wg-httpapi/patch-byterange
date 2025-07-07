@@ -42,9 +42,9 @@ This document specifies a media type for PATCH payloads that overwrites a specif
 
 # Introduction
 
-Filesystem interfaces typically provide some way to write at a specific position in a file. While HTTP supports reading byte range offsets using the Range header ({{Section 14 of RFC9110}}), this technique cannot generally be used in PUT, because the server may ignore the Content-Range header while executing the write, causing data corruption. However, by using a method and media type that the server must understand, writes to byte ranges with Content-Range semantics becomes possible even when server support is undetermined.
+Filesystem interfaces typically provide mechanisms to write at a specific position in a file. While HTTP supports reading byte ranges using the Range header ({{Section 14 of RFC9110}}), this technique cannot generally be used with PUT, as the server may ignore the Content-Range header, potentially causing data corruption. By using the PATCH method with a media type that the server understands, writing to byte ranges with Content-Range semantics becomes possible, even when server support is uncertain.
 
-This media type is intended for use in a wide variety of applications where overwriting specific parts of the file is desired. This includes idempotently writing data to a stream, appending data to a file, overwriting specific byte ranges, or writing to multiple regions in a single operation (for example, appending audio to a recording in progress while updating metadata at the beginning of the file).
+This media type is intended for use in a wide variety of applications including idempotently writing to a stream, appending data to a file, overwriting specific byte ranges, or writing to multiple regions in a single operation (for example, appending audio to a recording in progress while updating metadata at the beginning of the file).
 
 
 ## Notational Conventions
@@ -69,28 +69,27 @@ Sending a Content-Range field in a PUT request (A "partial PUT", {{RFC9110, Sect
 
 A byte range patch lists one or more _parts_. Each part specifies two essential components:
 
-1. Part fields: a list of HTTP fields that specify metadata, including the range being written to, the length of the body, and information about the target document that cannot be listed in the PATCH headers, e.g. Content-Type (where it would describe the patch itself, rather than the document being updated).
+1. **Part fields**: a list of HTTP fields that specify metadata, including the range being written to, the length of the body, and information about the target document that cannot be listed in the PATCH headers, e.g. Content-Type (where it would describe the patch itself, rather than the document being updated).
 
-2. A part body: the actual data to write to the specified location.
+2. **A part body**: the actual data to write to the specified location.
 
 Each part MUST indicate a single contiguous range to be written to. Servers MUST reject byte range patches that don't contain a known range with a 422 or 400 error. (This would mean the client may be using a yet-undefined mechanism to specify the target range.)
 
 The simplest form to represent a byte range patch is the "message/byterange" media type, which is similar to an HTTP message:
 
-~~~http
+~~~example
 Content-Range: bytes 2-5/12
 
-cdef
+wxyz
 ~~~
 
-This patch represents an instruction to write the four bytes "cdef" at an offset of 2 bytes. A document listing the digits 0-9 on a line, would look like this after applying the patch:
+This patch instructs the server to write the four bytes "wxyz" at an offset of 2 bytes. Given a document containing the digits 0-9 terminated by a CRLF, the result after applying the patch would be:
 
-~~~~
-01cdef6789␍␊
-~~~~
+~~~
+01wxyz6789␍␊
+~~~
 
-Although this example is a text document with a line terminator, part bodies are only interperted as binary data, and can potentially overwrite individual bytes of multi-byte characters.
-
+Although this example is a text document, part bodies are as binary data, and may overwrite individual bytes of multi-byte characters.
 
 ## The Content-Range Field
 
@@ -343,7 +342,7 @@ For updating an existing large file, the client can upload to a scratch file, th
 
 ## Complete Length Example
 
-A single PUT request that creates a new resource may be split apart into multiple PATCH requests. Here is an example that uploads a 600-byte document across three 200-byte segments.
+This example shows how to upload a 600-byte document over multiple requests with PATCH, 200 bytes at a time.
 
 The first PATCH request creates the resource:
 
@@ -563,7 +562,7 @@ In general, servers SHOULD treat an initialization towards resource limits, and 
 [^4]: This section to be removed before final publication.
 
 
-## Sparse Documents
+## Sparse and Noncontiguous Resources
 
 This pattern can enable multiple, parallel uploads to a document at the same time. For example, uploading a large log file from multiple devices. However, this document does not define any ways for clients to track the unwritten regions in sparse documents, and the existing conditional request headers are designed to cause conflicts. Parallel uploads may require a byte-level locking scheme or conflict-free operators. This may be addressed in a later document.
 
