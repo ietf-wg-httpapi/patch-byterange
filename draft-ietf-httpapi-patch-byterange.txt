@@ -52,22 +52,22 @@ Table of Contents
 
    1.  Introduction
      1.1.  Notational Conventions
-   2.  Modifying a content range with PATCH
-     2.1.  The Content-Range field
-     2.2.  The Content-Length field
-     2.3.  The Content-Offset field
-     2.4.  The Content-Type field
-     2.5.  Other fields
-     2.6.  Applying a patch
-     2.7.  Range units
+   2.  Modifying a Content Range with PATCH
+     2.1.  The Content-Range Field
+     2.2.  The Content-Length Field
+     2.3.  The Content-Offset Field
+     2.4.  The Content-Type Field
+     2.5.  Other Fields
+     2.6.  Applying a Patch
+     2.7.  Range Units
    3.  Byterange Media Types
-     3.1.  The multipart/byteranges media type
-     3.2.  The message/byterange media type
+     3.1.  The multipart/byteranges Media Type
+     3.2.  The message/byterange Media Type
        3.2.1.  Syntax
-     3.3.  The application/byteranges media type
+     3.3.  The application/byteranges Media Type
        3.3.1.  Syntax
    4.  Preserving Incomplete Uploads with "Prefer: transaction"
-   5.  Segmented document creation with PATCH
+   5.  Segmented Document Creation with PATCH
      5.1.  Complete Length Example
    6.  Registrations
      6.1.  message/byterange
@@ -81,7 +81,7 @@ Table of Contents
      8.1.  Normative References
      8.2.  Informative References
    Appendix A.  Discussion
-     A.1.  Sparse Documents
+     A.1.  Sparse and Noncontiguous Resources
      A.2.  Recovering from interrupted PUT
      A.3.  Splicing and Binary Diff
      A.4.  Ending Indeterminate Length Uploads
@@ -90,22 +90,20 @@ Table of Contents
 
 1.  Introduction
 
-   Filesystem interfaces typically provide some way to write at a
-   specific position in a file.  While HTTP supports reading byte range
-   offsets using the Range header (Section 14 of [RFC9110]), this
-   technique cannot generally be used in PUT, because the server may
-   ignore the Content-Range header while executing the write, causing
-   data corruption.  However, by using a method and media type that the
-   server must understand, writes to byte ranges with Content-Range
-   semantics becomes possible even when server support is undetermined.
+   Filesystem interfaces typically provide mechanisms to write at a
+   specific position in a file.  While HTTP supports reading byte ranges
+   using the Range header (Section 14 of [RFC9110]), this technique
+   cannot generally be used with PUT, as the server may ignore the
+   Content-Range header, potentially causing data corruption.  By using
+   the PATCH method with a media type that the server understands,
+   writing to byte ranges with Content-Range semantics becomes possible,
+   even when server support is uncertain.
 
    This media type is intended for use in a wide variety of applications
-   where overwriting specific parts of the file is desired.  This
-   includes idempotently writing data to a stream, appending data to a
-   file, overwriting specific byte ranges, or writing to multiple
-   regions in a single operation (for example, appending audio to a
-   recording in progress while updating metadata at the beginning of the
-   file).
+   including idempotently writing to a stream, appending data to a file,
+   overwriting specific byte ranges, or writing to multiple regions in a
+   single operation (for example, appending audio to a recording in
+   progress while updating metadata at the beginning of the file).
 
 1.1.  Notational Conventions
 
@@ -128,7 +126,7 @@ Table of Contents
    are described by an address offset rather than a range.  For example,
    "at byte 5" would separate the byte ranges 0-4 and 5-9.
 
-2.  Modifying a content range with PATCH
+2.  Modifying a Content Range with PATCH
 
    Sending a Content-Range field in a PUT request (A "partial PUT",
    [RFC9110], Section 14.5) requires server support to be processed
@@ -145,13 +143,14 @@ Table of Contents
    A byte range patch lists one or more _parts_. Each part specifies two
    essential components:
 
-   1.  Part fields: a list of HTTP fields that specify metadata,
+   1.  *Part fields*: a list of HTTP fields that specify metadata,
        including the range being written to, the length of the body, and
        information about the target document that cannot be listed in
        the PATCH headers, e.g. Content-Type (where it would describe the
        patch itself, rather than the document being updated).
 
-   2.  A part body: the actual data to write to the specified location.
+   2.  *A part body*: the actual data to write to the specified
+       location.
 
    Each part MUST indicate a single contiguous range to be written to.
    Servers MUST reject byte range patches that don't contain a known
@@ -163,19 +162,18 @@ Table of Contents
 
    Content-Range: bytes 2-5/12
 
-   cdef
+   wxyz
 
-   This patch represents an instruction to write the four bytes "cdef"
-   at an offset of 2 bytes.  A document listing the digits 0-9 on a
-   line, would look like this after applying the patch:
+   This patch instructs the server to write the four bytes "wxyz" at an
+   offset of 2 bytes.  Given a document containing the digits 0-9
+   terminated by a CRLF, the result after applying the patch would be:
 
-   01cdef6789␍␊
+   01wxyz6789␍␊
 
-   Although this example is a text document with a line terminator, part
-   bodies are only interperted as binary data, and can potentially
-   overwrite individual bytes of multi-byte characters.
+   Although this example is a text document, part bodies are as binary
+   data, and may overwrite individual bytes of multi-byte characters.
 
-2.1.  The Content-Range field
+2.1.  The Content-Range Field
 
    The Content-Range field (as seen inside a patch document) is used to
    specify where in the target document the part body will be written.
@@ -203,7 +201,7 @@ Table of Contents
    start, or the upload might continue indefinitely), then the Content-
    Offset field must be used instead.
 
-2.2.  The Content-Length field
+2.2.  The Content-Length Field
 
    A "Content-Length" part field, if provided, describes the length of
    the part body.  (To describe the size of the entire target resource,
@@ -213,7 +211,7 @@ Table of Contents
    in the Content-Range field, and servers MUST error when the Content-
    Length mismatches the length of the range.
 
-2.3.  The Content-Offset field
+2.3.  The Content-Offset Field
 
    The Content-Range field specifies an offset to write the content at,
    when the end of the write is not known.  It is used instead of
@@ -236,13 +234,13 @@ Table of Contents
    specifying the intended final length of the document.  A missing
    "complete-length" is equivalent to providing * in Content-Range.
 
-2.4.  The Content-Type field
+2.4.  The Content-Type Field
 
    A "Content-Type" part field MUST have the same effect as if provided
    in a PUT request uploading the entire resource (patch applied).  Its
    use is typically limited to resource creation.
 
-2.5.  Other fields
+2.5.  Other Fields
 
    Other part fields in the patch document SHOULD have the same meaning
    as if it is a message-level header in a PUT request uploading the
@@ -253,7 +251,7 @@ Table of Contents
    describe the entire patch, rather than the part body.  For example,
    the "Content-Type" or "Content-Location" fields.
 
-2.6.  Applying a patch
+2.6.  Applying a Patch
 
    Servers SHOULD NOT accept requests that write beyond, and not
    adjacent to, the end of the resource.  This would create a sparse
@@ -271,7 +269,7 @@ Table of Contents
    the entire request, or saving as many bytes as possible.  The client
    can then recover as it would recover from a network interruption.
 
-2.7.  Range units
+2.7.  Range Units
 
    Currently, the only defined range unit is "bytes", however this may
    be other, yet-to-be-defined values.
@@ -291,7 +289,7 @@ Table of Contents
 
 3.  Byterange Media Types
 
-3.1.  The multipart/byteranges media type
+3.1.  The multipart/byteranges Media Type
 
    The following illustrates a request with a "multipart/byteranges"
    body to write two ranges in a document:
@@ -327,7 +325,7 @@ Table of Contents
    an interruption, all of the parts will be rolled back together.
    However, the exact behavior is at the discretion of the server.
 
-3.2.  The message/byterange media type
+3.2.  The message/byterange Media Type
 
    When making a request with a single byte range, there is no need for
    a multipart boundary marker.  This document defines a new media type
@@ -381,7 +379,7 @@ Table of Contents
    dash-boundary and CRLF, and appending a close-delimiter (a CRLF,
    dash-boundary, terminating "--", and optional CRLF).
 
-3.3.  The application/byteranges media type
+3.3.  The application/byteranges Media Type
 
    The "application/byteranges" has the same semantics as "multipart/
    byteranges" but follows a binary format similar to "message/bhttp"
@@ -493,7 +491,7 @@ Table of Contents
    [RFC8297], since once the final response is written, this may no
    longer be useful information.
 
-5.  Segmented document creation with PATCH
+5.  Segmented Document Creation with PATCH
 
    As an alternative to using PUT to create a new resource, the contents
    of a resource may be uploaded in segments, written across several
@@ -557,9 +555,8 @@ Table of Contents
 
 5.1.  Complete Length Example
 
-   A single PUT request that creates a new resource may be split apart
-   into multiple PATCH requests.  Here is an example that uploads a
-   600-byte document across three 200-byte segments.
+   This example shows how to upload a 600-byte document over multiple
+   requests with PATCH, 200 bytes at a time.
 
    The first PATCH request creates the resource:
 
@@ -803,7 +800,7 @@ Appendix A.  Discussion
 
    // This section to be removed before final publication.
 
-A.1.  Sparse Documents
+A.1.  Sparse and Noncontiguous Resources
 
    This pattern can enable multiple, parallel uploads to a document at
    the same time.  For example, uploading a large log file from multiple
