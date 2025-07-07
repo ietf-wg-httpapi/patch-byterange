@@ -108,7 +108,7 @@ If the "last-pos" is unknown because the upload is indeterminate length (the Con
 
 A "Content-Length" part field, if provided, describes the length of the part body. (To describe the size of the entire target resource, see the Content-Range field.)
 
-If provided, it MUST exactly match the length of the range specified in the Content-Range field, and servers MUST error when the Content-Length mismatches the length of the range.
+If provided, it MUST exactly match the length of the range specified in the Content-Range field, and servers MUST error when the Content-Length mismatches the length of the range provided in Content-Range.
 
 
 ## The Content-Offset Field
