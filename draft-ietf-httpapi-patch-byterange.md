@@ -113,7 +113,7 @@ If provided, it MUST exactly match the length of the range specified in the Cont
 
 ## The Content-Offset Field
 
-The Content-Range field specifies an offset to write the content at, when the end of the write is not known. It is used instead of Content-Range when the Content-Length is not known.
+The Content-Offset field specifies an offset to write the content at, when the end of the write is not known. It is used instead of Content-Range when the Content-Length is not known.
 
 Its syntax is specified as a Structured Field {{!RFC8941}}:
 
