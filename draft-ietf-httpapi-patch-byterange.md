@@ -102,7 +102,7 @@ If the client does not know or care about the final length of the document, it M
 
 The unsatisfied-range form (e.g. `bytes */1000`) sets the size of the document, but without writing any data. It may be used to truncate a document (to invert an append operation), to allocate space for a document without specifying any of its contents, or to signal that an upload has ended when the previous part or request did not specify a complete-length. The part body MUST be empty.
 
-If the "last-pos" is is unknown because the upload is indeterminate length (the Content-Length of the request is not known from the start, or the upload might continue indefinitely), then the Content-Offset field must be used instead.
+If the "last-pos" is unknown because the upload is indeterminate length (the Content-Length of the request is not known from the start, or the upload might continue indefinitely), then the Content-Offset field must be used instead.
 
 
 ## The Content-Length field
@@ -126,9 +126,9 @@ The value indicates how much of the target document is to be skipped over, typic
 
 It accepts two parameters:
 
-The "unit" parameter indicates the unit associated with the value. A missing "unit" parameter is equivelant to providing `unit=bytes`.
+The "unit" parameter indicates the unit associated with the value. A missing "unit" parameter is equivalent to providing `unit=bytes`.
 
-The "complete-length" parameter is equivelant to the complete-length value in Content-Range. When provided, it MUST be an sf-integer specifying the intended final length of the document. A missing "complete-length" is equivelant to providing `*` in Content-Range.
+The "complete-length" parameter is equivalent to the complete-length value in Content-Range. When provided, it MUST be an sf-integer specifying the intended final length of the document. A missing "complete-length" is equivalent to providing `*` in Content-Range.
 
 
 ## The Content-Type field
@@ -236,7 +236,7 @@ The "application/byteranges" has the same semantics as "multipart/byteranges" bu
 
 ### Syntax
 
-Parsing starts by looking for a "Known-Length Message" or an "Indeterminate-Length Message". One or the other is distinguished by the different Framing Indicator.
+Parsing starts by looking for a "Known-Length Message" or an "Indeterminate-Length Message". One or the other is distinguished by reading the Framing Indicator.
 
 The remainder of the message is parsed by reading fields, then the content, by a method depending on if the message is known-length or indeterminate-length. If there are additional parts, they begin immediately after the end of a Content.
 
