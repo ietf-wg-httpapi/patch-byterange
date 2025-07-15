@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-07-13T02:03:33.163306+00:00",
+  "timestamp": "2025-07-15T01:58:44.218594+00:00",
   "repo": "ietf-wg-httpapi/patch-byterange",
   "labels": [
     {
@@ -73,6 +73,38 @@
           "updatedAt": "2025-07-07T20:08:41Z"
         }
       ]
+    },
+    {
+      "number": 2,
+      "id": "I_kwDOLl4qGM7Af_Nd",
+      "title": "Registrations for existing patch media types",
+      "url": "https://github.com/ietf-wg-httpapi/patch-byterange/issues/2",
+      "state": "OPEN",
+      "author": "awwright",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "By registering existing file formats with a media type, they would become available for use as a PATCH body.\n\nCandidates include:\n \n* [VCDIFF: RFC 3284 (IETF)](https://www.rfc-editor.org/rfc/rfc3284.html)\n* `diff -e` format: [POSIX (The Open Group/IEEE)](https://pubs.opengroup.org/onlinepubs/009604499/utilities/diff.html)\n\nSee also [HTTP Delta Encoding: RFC 3229 (Individual submission)](https://www.rfc-editor.org/rfc/rfc3229.html) which assigns identifiers to various patch formats.",
+      "createdAt": "2025-07-14T18:12:24Z",
+      "updatedAt": "2025-07-14T18:12:24Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 3,
+      "id": "I_kwDOLl4qGM7AgNe-",
+      "title": "An unparsed media type for \"append bytes\"",
+      "url": "https://github.com/ietf-wg-httpapi/patch-byterange/issues/3",
+      "state": "OPEN",
+      "author": "awwright",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Personally speaking, I would like to see a media type whose entire semantics is \"append the enclosed bytes to the target\". This would likely be very useful for logging applications.\n\nI think there would be demand for this, for example, the HTTP Resumable Uploads I-D authors asked about using a media type that would contain only the contents of the change, and enclosing the metadata for the patch body in the HTTP message itself. Some people were skeptical about registering a media type that can only be used in HTTP, but if the media semantics were simply \"append these contents to the target\" then no out-of-band information is needed in this case.",
+      "createdAt": "2025-07-14T18:33:30Z",
+      "updatedAt": "2025-07-14T18:33:30Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": []
