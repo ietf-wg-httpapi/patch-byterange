@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-07-17T01:55:58.093864+00:00",
+  "timestamp": "2025-07-20T02:04:38.339356+00:00",
   "repo": "ietf-wg-httpapi/patch-byterange",
   "labels": [
     {
@@ -27,7 +27,7 @@
       "labels": [],
       "body": "Adapted from Zulip chat since I am not sure where these sorts of questions are supposed to be directed:\n\nI am not sure how the server communicates sufficient information in response to a HEAD request that the client can resume their upload. Specifically steps 2 and 3 of \"Segmented document creation with PATCH\" does not provide very much detail. Presumably, the server will have a collection of byteranges uploaded so far. In response to an ordinary GET request, the client can receive a `multipart/byteranges` that allows the client to know exactly which portions of the upload are currently missing. But if they only send a HEAD request, the headers they receive in response would only give metadata about the total `multipart/byteranges` and would not include the nested headers of the `multipart/byteranges` which would be needed to know what data is missing. Perhaps I have not been able to put together the other parts of the draft to fill in the gaps here.",
       "createdAt": "2025-06-28T00:19:27Z",
-      "updatedAt": "2025-07-07T20:08:41Z",
+      "updatedAt": "2025-07-18T09:10:25Z",
       "closedAt": null,
       "comments": [
         {
@@ -71,6 +71,27 @@
           "body": "I made 0fad2535c9a2b4635047aed07a79e0b75078fa55 to address part of your question",
           "createdAt": "2025-07-07T20:08:41Z",
           "updatedAt": "2025-07-07T20:08:41Z"
+        },
+        {
+          "author": "TheDocTrier",
+          "authorAssociation": "NONE",
+          "body": "I tried to cover everything you mentioned and my response got a little out of control so I have included it here as a Gist:\n\nhttps://gist.github.com/TheDocTrier/3b704b9d110542a1271f56382da206e5\n\nBest,\nMichael",
+          "createdAt": "2025-07-17T07:51:10Z",
+          "updatedAt": "2025-07-17T07:51:10Z"
+        },
+        {
+          "author": "awwright",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Hi @TheDocTrier thanks for your reply, I'll start reading through it now. Would you be able to paste as much of that here as you can, so it's on the record, for our purposes?",
+          "createdAt": "2025-07-17T21:53:44Z",
+          "updatedAt": "2025-07-17T21:53:44Z"
+        },
+        {
+          "author": "TheDocTrier",
+          "authorAssociation": "NONE",
+          "body": "Do you mind if I break out some of the topics covered into separate issues? A lot of them feel unrelated to noncontiguous uploads or only very loosely related.",
+          "createdAt": "2025-07-18T09:10:25Z",
+          "updatedAt": "2025-07-18T09:10:25Z"
         }
       ]
     },
@@ -102,9 +123,31 @@
       "labels": [],
       "body": "Personally speaking, I would like to see a media type whose entire semantics is \"append the enclosed bytes to the target\". This would likely be very useful for logging applications.\n\nI think there would be demand for this, for example, the HTTP Resumable Uploads I-D authors asked about using a media type that would contain only the contents of the change, and enclosing the metadata for the patch body in the HTTP message itself. Some people were skeptical about registering a media type that can only be used in HTTP, but if the media semantics were simply \"append these contents to the target\" then no out-of-band information is needed in this case.",
       "createdAt": "2025-07-14T18:33:30Z",
-      "updatedAt": "2025-07-14T18:33:30Z",
+      "updatedAt": "2025-07-18T09:34:19Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "TheDocTrier",
+          "authorAssociation": "NONE",
+          "body": "Instead of registering a new media type, we could provide `end-/*` or `EOF-/*` as a range specifier. The [`other-range`](https://httpwg.org/specs/rfc9110.html#rule.other-range) rule suggests that expanding the ways to describe a range was somewhat expected.",
+          "createdAt": "2025-07-17T08:03:03Z",
+          "updatedAt": "2025-07-17T08:03:42Z"
+        },
+        {
+          "author": "awwright",
+          "authorAssociation": "COLLABORATOR",
+          "body": "The important feature of this proposal isn't (just) that it appends data, but that there's no need to parse it for metadata, like Content-Offset, Content-Range, or something else, inside the content. This adverts the need for a parser if your application only needs to append, which is a common case.\n\nHowever regarding the syntax, the `other-range` production is only used within the \"Range\" field, which is for querying a range that may or may not exist, and notably not \"Content-Range\" which actually describes the message content or part content/part body.\n\n[An earlier draft of this document proposed the exact technique you describe](https://www.ietf.org/archive/id/draft-ietf-httpapi-patch-byterange-00.html#name-the-content-range-field), and personally speaking I think it is entirely compatible with how HTTP extension mechanisms are _supposed_ to work\u2014key words \"supposed\"\u2014but several influential people in our companion HTTP WG thought it would be better for compatibility if this were a new field instead.\n\nThanks for the suggestion though, it's still useful to know I wasn't the only one who thought that.",
+          "createdAt": "2025-07-18T05:52:26Z",
+          "updatedAt": "2025-07-18T05:52:26Z"
+        },
+        {
+          "author": "TheDocTrier",
+          "authorAssociation": "NONE",
+          "body": "Ah, I see. Well that discussion sounds like it will preempt a number of my comments/suggestions in #1. It's interesting to see that these ideas were present in an earlier draft.\n\nI think my general hope was that a directive to \"append\" data could be made unit agnostic since it seems so close to a range specification (see [here](https://httpwg.org/specs/rfc9110.html#considerations.for.new.range.units):\n\n> Other range units, such as format-specific boundaries like pages, sections, records, rows, or time, are potentially usable in HTTP for application-specific purposes, but are not commonly used in practice. Implementors of alternative range units ought to consider how they would work with content codings and general-purpose intermediaries.",
+          "createdAt": "2025-07-18T09:34:19Z",
+          "updatedAt": "2025-07-18T09:34:19Z"
+        }
+      ]
     }
   ],
   "pulls": []
