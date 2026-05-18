@@ -386,7 +386,7 @@ Content-Type: message/byterange
 Content-Length: 283
 If-None-Match: *
 
-Content-Range: bytes 200-399/600
+Content-Range: bytes 400-599/600
 Content-Type: text/plain
 Content-Length: 200
 
