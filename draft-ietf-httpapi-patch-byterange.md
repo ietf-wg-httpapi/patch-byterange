@@ -20,7 +20,7 @@ author:
 normative:
   RFC2119: "Key words for use in RFCs"
   RFC9110: "HTTP Semantics"
-  RFC8941: "Structured Field Values for HTTP"
+  RFC9651: "Structured Field Values for HTTP"
   RFC9112: "HTTP/1.1"
 
 informative:
@@ -55,7 +55,7 @@ NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED",
 described in BCP 14 {{!RFC2119}} {{!RFC8174}} when, and only when, they
 appear in all capitals, as shown here.
 
-This document uses ABNF as defined in {{!RFC5234}} and imports grammar rules from {{!RFC8941}} and {{!RFC9112}}.
+This document uses ABNF as defined in {{!RFC5234}} and imports grammar rules from {{!RFC9651}} and {{!RFC9112}}.
 
 For brevity, example HTTP requests or responses may add newlines or whitespace,
 or omit some headers necessary for message transfer.
@@ -115,7 +115,7 @@ If provided, it MUST exactly match the length of the range specified in the Cont
 
 The Content-Offset field specifies an offset to write the content at, when the end of the write is not known. It is used instead of Content-Range when the Content-Length is not known.
 
-Its syntax is specified as a Structured Field {{!RFC8941}}:
+Its syntax is specified as a Structured Field {{!RFC9651}}:
 
 ~~~abnf
 Content-Offset = sf-item
