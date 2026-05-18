@@ -295,7 +295,7 @@ Field Line {
 
 # Preserving Incomplete Uploads with "Prefer: transaction" {#prefer-transaction}
 
-The stateless design of HTTP generally implies that a request is atomic (otherwise parties would need to keep track of the state of a request while it's in progress). Clients need not need be concerned with the side-effects of error halfway through an upload.
+The stateless design of HTTP generally implies that a request is atomic (otherwise parties would need to keep track of the state of a request while it's in progress). Clients need not be concerned with the side-effects of error halfway through an upload.
 
 However, some clients may desire partial state changes, particularly when remaking the upload is more expensive than recovering from an interruption. In these cases, clients will prefer the incomplete upload to be preserved as much as possible, so they may resume from where the incomplete request was terminated.
 
@@ -393,7 +393,7 @@ Content-Length: 200
 [200 bytes...]
 ~~~
 
-The server responds with 200 (OK). Since this completely writes out the 600-byte document, the server may also perform final processing, for example, checking that the document is well formed. The server MAY return an error code if there is a syntax or other error, or in an earlier response as soon as it it able to detect an error, however the exact behavior is left undefined.
+The server responds with 200 (OK). Since this completely writes out the 600-byte document, the server may also perform final processing, for example, checking that the document is well formed. The server MAY return an error code if there is a syntax or other error, or in an earlier response as soon as it is able to detect an error, however the exact behavior is left undefined.
 
 
 # Registrations
@@ -550,7 +550,7 @@ Servers supporting sparse files MUST NOT return uninitialized memory or storage 
 
 A byte range patch typically only requires server resources proportional to the patch size. One exception is pre-initializing space when growing a file. This occurs when a complete-length is specified in the Content-Range field, which hints at the final upload size, or when writing to an offset far after the end of the file, and the server initializes the space in between. This initialization could be a very expensive operation compared to the actual size of the patch.
 
-In general, servers SHOULD treat an initialization towards resource limits, and issue a 400 (Client Error) as appropriate. Note that 413 (Payload Too Large) would be misleading in this situation, as it would indicate the patch itself is too large, and the client should break up the patches into smaller chunks, rather than the intended signal that the final upload size isd too large.
+In general, servers SHOULD treat an initialization towards resource limits, and issue a 400 (Client Error) as appropriate. Note that 413 (Payload Too Large) would be misleading in this situation, as it would indicate the patch itself is too large, and the client should break up the patches into smaller chunks, rather than the intended signal that the final upload size is too large.
 
 
 --- back
