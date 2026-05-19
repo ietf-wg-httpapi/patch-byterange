@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-17T03:40:59.577823+00:00",
+  "timestamp": "2026-05-19T03:49:46.177840+00:00",
   "repo": "ietf-wg-httpapi/patch-byterange",
   "labels": [
     {
@@ -150,5 +150,32 @@
       ]
     }
   ],
-  "pulls": []
+  "pulls": [
+    {
+      "number": 4,
+      "id": "PR_kwDOLl4qGM7c2hhg",
+      "title": "Various typos, example fix, outdated RFC",
+      "url": "https://github.com/ietf-wg-httpapi/patch-byterange/pull/4",
+      "state": "OPEN",
+      "author": "ebremer",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-05-18T22:52:16Z",
+      "updatedAt": "2026-05-18T22:52:16Z",
+      "baseRepository": "ietf-wg-httpapi/patch-byterange",
+      "baseRefName": "master",
+      "baseRefOid": "12fe2b49d979a17f89a3d69238ae40b59b2bca8c",
+      "headRepository": "ebremer/patch-byterange",
+      "headRefName": "master",
+      "headRefOid": "8ac8531e6e8cfcb24484bd7e7df60a36287c72df",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    }
+  ]
 }
