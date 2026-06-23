@@ -1,0 +1,7 @@
+# Build chain, installed by running `make`
+lib/
+# Build products, which will be published to a branch
+draft-ietf-httpapi-patch-byterange.xml
+draft-ietf-httpapi-patch-byterange.txt
+draft-ietf-httpapi-patch-byterange.html
+draft-ietf-httpapi-patch-byterange.pdf
