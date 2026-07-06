@@ -89,7 +89,7 @@ This patch instructs the server to write the four bytes "wxyz" at an offset of 2
 01wxyz6789␍␊
 ~~~
 
-Although this example is a text document, part bodies are as binary data, and may overwrite individual bytes of multi-byte characters.
+Although this example is a text document, part bodies are binary data, and may overwrite individual bytes of multi-byte characters.
 
 ## The Content-Range Field
 
