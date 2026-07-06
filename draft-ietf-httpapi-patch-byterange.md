@@ -319,6 +319,32 @@ Preference-Applied: transaction=persist
 Servers might consider signaling this in a 103 (Early Hints) response [RFC8297], since once the final response is written, this may no longer be useful information.
 
 
+
+# Discovery with Accept-Patch
+
+Servers SHOULD indicate support for supported patch types in the `Accept-Patch` response field {{RFC5789}}.
+
+A server that supports byterange media types defined in this document should respond to an OPTIONS request as follows:
+
+~~~ example
+HTTP/1.1 204 No Content
+Allow: GET, HEAD, PUT, PATCH, OPTIONS
+Accept-Patch: message/byterange, multipart/byteranges
+~~~
+
+A server should also advertise supported patch formats in response to a failed or conditional PATCH request, allowing the client to retry with a supported format:
+
+~~~ example
+HTTP/1.1 415 Unsupported Media Type
+Accept-Patch: message/byterange, multipart/byteranges
+Content-Type: text/plain
+
+This server supports byte-range patches using the
+message/byterange or multipart/byteranges media types.
+~~~
+
+
+
 # Segmented Document Creation with PATCH
 
 As an alternative to using PUT to create a new resource, the contents of a resource may be uploaded in segments, written across several PATCH requests.
