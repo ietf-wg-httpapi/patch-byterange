@@ -3,6 +3,7 @@ title: Byte Range PATCH
 docname: draft-ietf-httpapi-patch-byterange-latest
 submissiontype: IETF
 category: std
+updates: 5789
 ipr: trust200902
 workgroup: "Building Blocks for HTTP APIs"
 keyword:
@@ -19,6 +20,7 @@ author:
 
 normative:
   RFC2119: "Key words for use in RFCs"
+  RFC5789: "PATCH Method for HTTP"
   RFC9110: "HTTP Semantics"
   RFC9651: "Structured Field Values for HTTP"
   RFC9112: "HTTP/1.1"
@@ -26,7 +28,6 @@ normative:
 informative:
   RFC2046: "Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types"
   RFC4918: "HTTP Extensions for Web Distributed Authoring and Versioning (WebDAV)"
-  RFC5789: "PATCH Method for HTTP"
   RFC8297: "An HTTP Status Code for Indicating Hints"
   RFC9292: "Binary Representation of HTTP Messages"
 
@@ -34,7 +35,7 @@ informative:
 
 --- abstract
 
-This document specifies a media type for PATCH payloads that overwrites a specific byte range, facilitating random access writes and segmented uploads of resources.
+This document specifies a media type for PATCH payloads that overwrites a specific byte range, facilitating random access writes and segmented uploads of resources. It updates RFC 5789 to permit a server to preserve the effects of a partially applied patch when the client has explicitly requested this behavior.
 
 
 
@@ -45,6 +46,8 @@ This document specifies a media type for PATCH payloads that overwrites a specif
 Filesystem interfaces typically provide mechanisms to write at a specific position in a file. While HTTP supports reading byte ranges using the Range header ({{Section 14 of RFC9110}}), this technique cannot generally be used with PUT, as the server may ignore the Content-Range header, potentially causing data corruption. By using the PATCH method with a media type that the server understands, writing to byte ranges with Content-Range semantics becomes possible, even when server support is uncertain.
 
 This media type is intended for use in a wide variety of applications including idempotently writing to a stream, appending data to a file, overwriting specific byte ranges, or writing to multiple regions in a single operation (for example, appending audio to a recording in progress while updating metadata at the beginning of the file).
+
+Some of these applications involve resuming an interrupted upload, which requires the server to preserve the effects of an incompletely transferred patch. Because the PATCH method {{RFC5789}} otherwise requires a patch document to be applied atomically, this document updates {{RFC5789}} to permit non-atomic processing when the client explicitly signals a preference for it ({{prefer-transaction}}).
 
 
 ## Notational Conventions
@@ -147,7 +150,7 @@ Use of such fields SHOULD be limited to cases where the meaning in the HTTP requ
 
 Servers SHOULD NOT accept requests that write beyond, and not adjacent to, the end of the resource. This would create a sparse file, where some bytes are undefined. For example, writing at byte 601 of a resource where bytes 0-599 are defined; this would leave byte 600 undefined. Servers that accept sparse writes MUST NOT disclose uninitialized content, and SHOULD fill in undefined regions with zeros.
 
-The expected length of the write can be computed from the part fields. If the actual length of the part body mismatches the expected length, this MUST be treated the same as a network interruption at the shorter length, but anticipating the longer length. Recovering from this interruption may involve rolling back the entire request, or saving as many bytes as possible. The client can then recover as it would recover from a network interruption.
+The expected length of the write can be computed from the part fields. If the actual length of the part body mismatches the expected length, this MUST be treated the same as a network interruption at the shorter length, but anticipating the longer length. Recovering from this interruption normally involves rolling back the entire request, as required by {{Section 2 of RFC5789}}; if the client signaled the "transaction=persist" preference ({{prefer-transaction}}), the server MAY instead save as many bytes as possible. The client can then recover as it would recover from a network interruption.
 
 
 ## Range Units
@@ -187,7 +190,7 @@ Content-Type: text/plain
 
 The syntax for multipart messages is defined in {{RFC2046, Section 5.1.1}}. While the body cannot contain the boundary, servers MAY use the Content-Length field to skip to the boundary (potentially ignoring a boundary in the body, which would be an error by the client). Content-Range MUST NOT be used in place of Content-Length for this purpose.
 
-The multipart/byteranges type may be used for operations where multiple regions must be updated at the same time; clients expect all the changes to be recorded as a single operation, or that if there's an interruption, all of the parts will be rolled back together. However, the exact behavior is at the discretion of the server.
+The multipart/byteranges type may be used for operations where multiple regions must be updated at the same time; all the changes are recorded as a single operation, and if there's an interruption, all of the parts are rolled back together, as required by {{Section 2 of RFC5789}}. A server honoring the "transaction=persist" preference ({{prefer-transaction}}) MAY instead preserve the partial effects of an interrupted patch.
 
 
 ## The message/byterange Media Type {#message-byterange}
@@ -295,9 +298,11 @@ Field Line {
 
 # Preserving Incomplete Uploads with "Prefer: transaction" {#prefer-transaction}
 
-The stateless design of HTTP generally implies that a request is atomic (otherwise parties would need to keep track of the state of a request while it's in progress). Clients need not be concerned with the side-effects of error halfway through an upload.
+PATCH requests are atomic: {{Section 2 of RFC5789}} requires that the server apply the entire patch document atomically, applying none of the changes if the patch cannot be applied in full, and never providing a partially modified representation (for example, in response to a GET during the operation). Clients need not be concerned with the side-effects of an error halfway through an upload.
 
 However, some clients may desire partial state changes, particularly when remaking the upload is more expensive than recovering from an interruption. In these cases, clients will prefer the incomplete upload to be preserved as much as possible, so they may resume from where the incomplete request was terminated.
+
+This document therefore updates {{RFC5789}} as follows: when a PATCH request uses one of the byte range patch media types described in this document (multipart/byteranges, message/byterange, or application/byteranges), and the client has explicitly signaled the "transaction=persist" preference (defined below), the server MAY commit changes as they are received and MAY preserve the effects of a partially applied patch rather than rolling them back; it MAY also make those partial effects observable to other requests, so that the client can determine how much of an interrupted upload was stored and resume it. Absent this preference, the atomicity requirements of {{Section 2 of RFC5789}} apply unchanged.
 
 The client's preference for atomic or upload-preserving behavior may be signaled by a Prefer header:
 
@@ -306,11 +311,11 @@ Prefer: transaction=atomic
 Prefer: transaction=persist
 ~~~
 
-The `transaction=atomic` preference indicates that the request SHOULD commit only when a successful response is returned, and not any time before the end of the upload.
+The `transaction=atomic` preference indicates that the request SHOULD commit only when a successful response is returned, and not any time before the end of the upload. For PATCH requests, this is the default behavior required by {{Section 2 of RFC5789}}.
 
 The `transaction=persist` preference indicates that uploaded data SHOULD be continuously committed, so that if the upload is interrupted, it is possible to resume the upload from where it left off.
 
-This preference is generally applicable to any HTTP request (and not merely for PATCH or byte range patches). Servers SHOULD indicate when this preference was honored, using a "Preference-Applied" response header. For example:
+This preference is generally applicable to any HTTP request (and not merely for PATCH or byte range patches). However, this document relaxes the atomicity requirements of {{RFC5789}} only for the byte range patch media types it describes; a PATCH request with any other media type remains subject to {{Section 2 of RFC5789}} even if the "transaction=persist" preference is present. Servers SHOULD indicate when this preference was honored, using a "Preference-Applied" response header. For example:
 
 ~~~
 Preference-Applied: transaction=persist
