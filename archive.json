@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-14T04:19:31.336403+00:00",
+  "timestamp": "2026-07-07T03:37:32.207394+00:00",
   "repo": "ietf-wg-httpapi/patch-byterange",
   "labels": [
     {
@@ -148,6 +148,22 @@
           "updatedAt": "2025-07-18T09:34:19Z"
         }
       ]
+    },
+    {
+      "number": 6,
+      "id": "I_kwDOLl4qGM8AAAABH2C8kA",
+      "title": "Add RFC 9530: Digest Fields",
+      "url": "https://github.com/ietf-wg-httpapi/patch-byterange/issues/6",
+      "state": "OPEN",
+      "author": "ebremer",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "[RFC 9530: Digest Fields](https://www.rfc-editor.org/info/rfc9530/) seems like a solid addition to this specification for integrity checks.",
+      "createdAt": "2026-07-06T17:07:01Z",
+      "updatedAt": "2026-07-06T17:07:01Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -185,6 +201,32 @@
           "updatedAt": "2026-06-12T23:26:35Z"
         }
       ],
+      "reviews": []
+    },
+    {
+      "number": 5,
+      "id": "PR_kwDOLl4qGM7udKj7",
+      "title": "Conflict with RFC 5789's atomicity requirement ",
+      "url": "https://github.com/ietf-wg-httpapi/patch-byterange/pull/5",
+      "state": "OPEN",
+      "author": "ebremer",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-07-06T16:58:32Z",
+      "updatedAt": "2026-07-06T16:58:32Z",
+      "baseRepository": "ietf-wg-httpapi/patch-byterange",
+      "baseRefName": "master",
+      "baseRefOid": "65a2fb7b4053e2912381b7c3fed9e83662ef73c2",
+      "headRepository": "ebremer/patch-byterange",
+      "headRefName": "ConflictWithRFC5789",
+      "headRefOid": "70a69776301355f3ab1fdf8bbfa6ae68e244eac9",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
       "reviews": []
     }
   ]
