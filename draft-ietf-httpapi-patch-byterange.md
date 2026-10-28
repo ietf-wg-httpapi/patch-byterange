@@ -111,7 +111,7 @@ A "Content-Length" part field, if provided, describes the length of the part bod
 If provided, it MUST exactly match the length of the range specified in the Content-Range field, and servers MUST error when the Content-Length mismatches the length of the range provided in Content-Range.
 
 
-## The Content-Offset Field
+## The Content-Offset Field {#content-offset-field}
 
 The Content-Offset field specifies an offset to write the content at, when the end of the write is not known. It is used instead of Content-Range when the Content-Length is not known.
 
@@ -420,9 +420,11 @@ Content-Length: 200
 The server responds with 200 (OK). Since this completely writes out the 600-byte document, the server may also perform final processing, for example, checking that the document is well formed. The server MAY return an error code if there is a syntax or other error, or in an earlier response as soon as it is able to detect an error, however the exact behavior is left undefined.
 
 
-# Registrations
+# IANA Considerations
 
 ## message/byterange
+
+IANA is asked to register the following media type in the "Media Types" registry.
 
 Type name:
 : message
@@ -481,6 +483,8 @@ Change controller:
 
 ## application/byteranges
 
+IANA is asked to register the following media type in the "Media Types" registry.
+
 Type name:
 : application
 
@@ -538,13 +542,19 @@ Change controller:
 
 ## Content-Offset
 
+IANA is asked to register the following field in the "Hypertext Transfer Protocol (HTTP) Field Name Registry".
+
 Field name:
 : Content-Offset
 
-Status: permanent
+Status:
+: permanent
+
+Structured Type:
+: Item
 
 Specification document:
-: This document.
+: {{content-offset-field}} of this document
 
 
 ## "transaction" preference
