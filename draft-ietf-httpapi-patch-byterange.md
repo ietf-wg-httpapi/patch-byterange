@@ -357,9 +357,9 @@ A user-agent may also use PATCH to recover from an interrupted PUT request, if i
 
 3. If the client sees from the HEAD response that additional data remains to be uploaded, it may make a PATCH request to resume uploading. Even if no data was uploaded or the resource was not created, the client should attempt creating the resource with PATCH to mitigate the possibility of another interrupted connection with a server that does not save incomplete transfers. However if in response to PATCH, the server reports 405 (Method Not Allowed), 415 (Unsupported Media Type), or 501 (Not Implemented), then the client must resort to retrying the PUT request.
 
-4. The server detects the completion of the final request when the current received data matches the indicated complete length. For example, a `Content-Range: 500-599/600` field is a write at the end of the resource. The server processes the upload and returns a response for it.
+4. The server detects the completion of the final request when the current received data matches the indicated complete length. For example, a `Content-Range: bytes 500-599/600` field is a write at the end of the resource. The server processes the upload and returns a response for it.
 
-If the client does not know the complete length of its upload (for example, an upload of live audio), it may use the indeterminate length form "*" to append data to the document. The end of the upload is then signaled with an "unsatisfied-range" form (e.g. `Content-Range: */1000`), which instructs the server that the upload is complete if it has received all 1000 bytes.
+If the client does not know the complete length of its upload (for example, an upload of live audio), it may use the indeterminate length form "*" to append data to the document. The end of the upload is then signaled with an "unsatisfied-range" form (e.g. `Content-Range: bytes */1000`), which instructs the server that the upload is complete if it has received all 1000 bytes.
 
 For building POST endpoints that support large uploads, clients can first upload the data to a scratch file as described above, and then submit a link to the file in a POST request.
 
