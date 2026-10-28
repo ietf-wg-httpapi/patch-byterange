@@ -168,7 +168,7 @@ The following illustrates a request with a "multipart/byteranges" body to write 
 ~~~ example
 PATCH /uploads/foo HTTP/1.1
 Content-Type: multipart/byteranges; boundary=THIS_STRING_SEPARATES
-Content-Length: 206
+Content-Length: 205
 If-Match: "xyzzy"
 If-Unmodified-Since: Sat, 29 Oct 1994 19:43:31 GMT
 
@@ -199,7 +199,7 @@ The "message/byterange" form may be used in a PATCH request as so:
 ~~~ example
 PATCH /uploads/foo HTTP/1.1
 Content-Type: message/byterange
-Content-Length: 272
+Content-Length: 262
 If-Match: "xyzzy"
 If-Unmodified-Since: Sat, 29 Oct 1994 19:43:31 GMT
 
