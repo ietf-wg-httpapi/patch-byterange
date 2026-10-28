@@ -385,7 +385,7 @@ Content-Length: 200
 [200 bytes...]
 ~~~
 
-This request allocates a 600 byte document, and uploading the first 200 bytes of it. The server responds with 200, indicating that the complete upload was stored.
+This request allocates a 600 byte document, and uploads the first 200 bytes of it. The server responds with 201 (Created), indicating that the resource was created and the complete request was stored.
 
 Additional requests upload the remainder of the document:
 
@@ -393,7 +393,6 @@ Additional requests upload the remainder of the document:
 PATCH /uploads/foo HTTP/1.1
 Content-Type: message/byterange
 Content-Length: 283
-If-None-Match: *
 
 Content-Range: bytes 200-399/600
 Content-Type: text/plain
@@ -410,7 +409,6 @@ A third request uploads the final portion of the document:
 PATCH /uploads/foo HTTP/1.1
 Content-Type: message/byterange
 Content-Length: 283
-If-None-Match: *
 
 Content-Range: bytes 400-599/600
 Content-Type: text/plain
