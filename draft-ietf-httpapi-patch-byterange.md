@@ -23,13 +23,14 @@ normative:
   RFC9651: "Structured Field Values for HTTP"
   RFC9112: "HTTP/1.1"
   RFC7240: "Prefer Header for HTTP"
+  RFC2046: "Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types"
+  RFC9292: "Binary Representation of HTTP Messages"
+  RFC9000: "QUIC: A UDP-Based Multiplexed and Secure Transport"
 
 informative:
-  RFC2046: "Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types"
   RFC4918: "HTTP Extensions for Web Distributed Authoring and Versioning (WebDAV)"
   RFC5789: "PATCH Method for HTTP"
   RFC8297: "An HTTP Status Code for Indicating Hints"
-  RFC9292: "Binary Representation of HTTP Messages"
 
 
 
@@ -241,6 +242,8 @@ Parsing starts by looking for a "Known-Length Message" or an "Indeterminate-Leng
 The remainder of the message is parsed by reading fields, then the content, by a method depending on if the message is known-length or indeterminate-length. If there are additional parts, they begin immediately after the end of a Content.
 
 The "Known-Length Field Section", "Known-Length Content", "Indeterminate-Length Field Section", "Indeterminate-Length Content", "Indeterminate-Length Content Chunk", "Field Line" definitions are identical to their definition in message/bhttp. They are used in one or more Known-Length Message and/or Indeterminate-Length Message productions, concatenated together.
+
+This syntax uses the notation from {{Section 1.3 of RFC9000}}. Fields marked "(i)" are variable-length integers, encoded as described in {{Section 16 of RFC9000}}.
 
 ~~~
 Patch {
