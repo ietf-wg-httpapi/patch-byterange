@@ -73,7 +73,7 @@ A byte range patch lists one or more _parts_. Each part specifies two essential 
 
 2. **A part body**: the actual data to write to the specified location.
 
-Each part MUST indicate a single contiguous range to be written to. Servers MUST reject byte range patches that don't contain a known range with a 422 or 400 error. (This would mean the client may be using a yet-undefined mechanism to specify the target range.)
+Each part MUST indicate a single contiguous range to be written to. Servers MUST reject byte range patches that don't contain a known range (such as one given by the Content-Range or Content-Offset field) with a 422 or 400 error. (This would mean the client may be using a yet-undefined mechanism to specify the target range.)
 
 The simplest form to represent a byte range patch is the "message/byterange" media type, which is similar to an HTTP message:
 
@@ -216,7 +216,7 @@ This represents a request to modify a 600-byte document, starting at a 100-byte 
 
 The syntax re-uses concepts from the "multipart/byteranges" media type, except it omits the multipart separator, and so only allows a single range to be specified. It is also similar to the "message/http" media type, except the first line (the status line or request line) is omitted; a message/byterange document can be fed into a message/http parser by first prepending a line like "PATCH / HTTP/1.1".
 
-It follows the syntax of HTTP message headers and body. It MUST include the Content-Range header field. If the message length is known by the sender, it SHOULD contain the Content-Length header field. Unknown or nonapplicable header fields MUST be ignored.
+It follows the syntax of HTTP message headers and body. It MUST include either the Content-Range or the Content-Offset field. If the message length is known by the sender, it SHOULD contain the Content-Length header field. Unknown or nonapplicable header fields MUST be ignored.
 
 The field-line and message-body productions are specified in [RFC9112].
 
