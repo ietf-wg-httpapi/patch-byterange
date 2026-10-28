@@ -73,7 +73,7 @@ A byte range patch lists one or more _parts_. Each part specifies two essential 
 
 2. **A part body**: the actual data to write to the specified location.
 
-Each part MUST indicate a single contiguous range to be written to. Servers MUST reject byte range patches that don't contain a known range (such as one given by the Content-Range or Content-Offset field) with a 422 or 400 error. (This would mean the client may be using a yet-undefined mechanism to specify the target range.)
+Each part MUST indicate a single contiguous range to be written to. Servers MUST reject byte range patches that don't contain a known range (such as one given by the Content-Range or Content-Offset field) with a 422 (Unprocessable Content) or 400 (Bad Request) status code. (This would mean the client may be using a yet-undefined mechanism to specify the target range.)
 
 The simplest form to represent a byte range patch is the "message/byterange" media type, which is similar to an HTTP message:
 
@@ -574,7 +574,7 @@ Servers supporting sparse files MUST NOT return uninitialized memory or storage 
 
 A byte range patch typically only requires server resources proportional to the patch size. One exception is pre-initializing space when growing a file. This occurs when a complete-length is specified in the Content-Range field, which hints at the final upload size, or when writing to an offset far after the end of the file, and the server initializes the space in between. This initialization could be a very expensive operation compared to the actual size of the patch.
 
-In general, servers SHOULD treat an initialization towards resource limits, and issue a 400 (Client Error) as appropriate. Note that 413 (Payload Too Large) would be misleading in this situation, as it would indicate the patch itself is too large, and the client should break up the patches into smaller chunks, rather than the intended signal that the final upload size is too large.
+In general, servers SHOULD treat an initialization towards resource limits, and issue a 400 (Bad Request) as appropriate. Note that 413 (Content Too Large) would be misleading in this situation, as it would indicate the patch itself is too large, and the client should break up the patches into smaller chunks, rather than the intended signal that the final upload size is too large.
 
 
 --- back
