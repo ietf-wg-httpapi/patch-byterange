@@ -22,6 +22,7 @@ normative:
   RFC9110: "HTTP Semantics"
   RFC9651: "Structured Field Values for HTTP"
   RFC9112: "HTTP/1.1"
+  RFC7240: "Prefer Header for HTTP"
 
 informative:
   RFC2046: "Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types"
@@ -558,6 +559,8 @@ Specification document:
 
 
 ## "transaction" preference
+
+IANA is asked to register the following preference in the "HTTP Preferences" registry ({{Section 5.1 of RFC7240}}).
 
 Preference:
 : transaction
